@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Fluent;
 use PHPUnit\Framework\TestCase;
-use Reliese\Coders\Model\Model;
-use Reliese\Coders\Model\Relations\BelongsTo;
-use Reliese\Coders\Model\Relations\HasMany;
+use Xptela\EloquentModelGenerator\Coders\Model\Model;
+use Xptela\EloquentModelGenerator\Coders\Model\Relations\BelongsTo;
+use Xptela\EloquentModelGenerator\Coders\Model\Relations\HasMany;
 
 class HasManyTest extends TestCase
 {

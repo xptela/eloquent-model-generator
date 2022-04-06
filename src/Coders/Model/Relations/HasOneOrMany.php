@@ -5,12 +5,12 @@
  * Date: 11/09/16 09:26 PM.
  */
 
-namespace Reliese\Coders\Model\Relations;
+namespace Xptela\EloquentModelGenerator\Coders\Model\Relations;
 
-use Reliese\Support\Dumper;
 use Illuminate\Support\Fluent;
-use Reliese\Coders\Model\Model;
-use Reliese\Coders\Model\Relation;
+use Xptela\EloquentModelGenerator\Coders\Model\Model;
+use Xptela\EloquentModelGenerator\Coders\Model\Relation;
+use Xptela\EloquentModelGenerator\Support\Dumper;
 
 abstract class HasOneOrMany implements Relation
 {
@@ -20,12 +20,12 @@ abstract class HasOneOrMany implements Relation
     protected $command;
 
     /**
-     * @var \Reliese\Coders\Model\Model
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     protected $parent;
 
     /**
-     * @var \Reliese\Coders\Model\Model
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     protected $related;
 
@@ -33,13 +33,13 @@ abstract class HasOneOrMany implements Relation
      * HasManyWriter constructor.
      *
      * @param \Illuminate\Support\Fluent $command
-     * @param \Reliese\Coders\Model\Model $parent
-     * @param \Reliese\Coders\Model\Model $related
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $parent
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $related
      */
     public function __construct(Fluent $command, Model $parent, Model $related)
     {
         $this->command = $command;
-        $this->parent = $parent;
+        $this->parent  = $parent;
         $this->related = $related;
     }
 
@@ -58,22 +58,22 @@ abstract class HasOneOrMany implements Relation
      */
     public function body()
     {
-        $body = 'return $this->'.$this->method().'(';
+        $body = 'return $this->' . $this->method() . '(';
 
-        $body .= $this->related->getQualifiedUserClassName().'::class';
+        $body .= $this->related->getQualifiedUserClassName() . '::class';
 
         if ($this->needsForeignKey()) {
             $foreignKey = $this->parent->usesPropertyConstants()
-                ? $this->related->getQualifiedUserClassName().'::'.strtoupper($this->foreignKey())
+                ? $this->related->getQualifiedUserClassName() . '::' . strtoupper($this->foreignKey())
                 : $this->foreignKey();
-            $body .= ', '.Dumper::export($foreignKey);
+            $body       .= ', ' . Dumper::export($foreignKey);
         }
 
         if ($this->needsLocalKey()) {
             $localKey = $this->related->usesPropertyConstants()
-                ? $this->related->getQualifiedUserClassName().'::'.strtoupper($this->localKey())
+                ? $this->related->getQualifiedUserClassName() . '::' . strtoupper($this->localKey())
                 : $this->localKey();
-            $body .= ', '.Dumper::export($localKey);
+            $body     .= ', ' . Dumper::export($localKey);
         }
 
         $body .= ');';
@@ -91,7 +91,7 @@ abstract class HasOneOrMany implements Relation
      */
     protected function needsForeignKey()
     {
-        $defaultForeignKey = $this->parent->getRecordName().'_id';
+        $defaultForeignKey = $this->parent->getRecordName() . '_id';
 
         return $defaultForeignKey != $this->foreignKey() || $this->needsLocalKey();
     }

@@ -5,10 +5,10 @@
  * Date: 12/10/16 12:09 AM.
  */
 
-namespace Reliese\Database\Eloquent;
+namespace Xptela\EloquentModelGenerator\Database\Eloquent;
 
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Http\Request;
 
 class WhoDidIt
 {
@@ -33,14 +33,6 @@ class WhoDidIt
     public function creating(Eloquent $model)
     {
         $model->created_by = $this->doer();
-    }
-
-    /**
-     * @param \Illuminate\Database\Eloquent\Model $model
-     */
-    public function updating(Eloquent $model)
-    {
-        $model->udpated_by = $this->doer();
     }
 
     /**
@@ -69,5 +61,13 @@ class WhoDidIt
     protected function userId()
     {
         return $this->authenticated()->id;
+    }
+
+    /**
+     * @param \Illuminate\Database\Eloquent\Model $model
+     */
+    public function updating(Eloquent $model)
+    {
+        $model->udpated_by = $this->doer();
     }
 }

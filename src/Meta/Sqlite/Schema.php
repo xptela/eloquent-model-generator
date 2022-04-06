@@ -1,16 +1,16 @@
 <?php
 
-namespace Reliese\Meta\Sqlite;
+namespace Xptela\EloquentModelGenerator\Meta\Sqlite;
 
-use Reliese\Meta\Blueprint;
-use Illuminate\Support\Fluent;
 use Illuminate\Database\Connection;
+use Illuminate\Support\Fluent;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 /**
  * Created by Cristian.
  * Date: 18/09/16 06:50 PM.
  */
-class Schema implements \Reliese\Meta\Schema
+class Schema implements \Xptela\EloquentModelGenerator\Meta\Schema
 {
     /**
      * @var string
@@ -28,7 +28,7 @@ class Schema implements \Reliese\Meta\Schema
     protected $loaded = false;
 
     /**
-     * @var \Reliese\Meta\Blueprint[]
+     * @var \Xptela\EloquentModelGenerator\Meta\Blueprint[]
      */
     protected $tables = [];
 
@@ -40,20 +40,11 @@ class Schema implements \Reliese\Meta\Schema
      */
     public function __construct($schema, $connection)
     {
-        $this->schema = $schema;
+        $this->schema     = $schema;
         $this->connection = $connection;
         /* Sqlite has a bool type that doctrine isn't registering */
         $this->connection->getDoctrineConnection()->getDatabasePlatform()->registerDoctrineTypeMapping('bool', 'boolean');
         $this->load();
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Schema\AbstractSchemaManager
-     * @todo: Use Doctrine instead of raw database queries
-     */
-    public function manager()
-    {
-        return $this->connection->getDoctrineSchemaManager();
     }
 
     /**
@@ -87,7 +78,16 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @return \Doctrine\DBAL\Schema\AbstractSchemaManager
+     * @todo: Use Doctrine instead of raw database queries
+     */
+    public function manager()
+    {
+        return $this->connection->getDoctrineSchemaManager();
+    }
+
+    /**
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      */
     protected function fillColumns(Blueprint $blueprint)
     {
@@ -111,7 +111,7 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      */
     protected function fillConstraints(Blueprint $blueprint)
     {
@@ -122,19 +122,7 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * Quick little hack since it is no longer possible to set PDO's fetch mode
-     * to PDO::FETCH_ASSOC.
-     *
-     * @param $data
-     * @return mixed
-     */
-    protected function arraify($data)
-    {
-        return json_decode(json_encode($data), true);
-    }
-
-    /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      * @todo: Support named primary keys
      */
     protected function fillPrimaryKey(Blueprint $blueprint)
@@ -142,8 +130,8 @@ class Schema implements \Reliese\Meta\Schema
         $indexes = $this->manager()->listTableIndexes($blueprint->table());
 
         $key = [
-            'name' => 'primary',
-            'index' => '',
+            'name'    => 'primary',
+            'index'   => '',
             'columns' => $indexes['primary']->getColumns(),
         ];
 
@@ -151,7 +139,7 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      * @internal param string $sql
      */
     protected function fillIndexes(Blueprint $blueprint)
@@ -161,16 +149,16 @@ class Schema implements \Reliese\Meta\Schema
 
         foreach ($indexes as $setup) {
             $index = [
-                'name' => $setup->isUnique() ? 'unique' : 'index',
+                'name'    => $setup->isUnique() ? 'unique' : 'index',
                 'columns' => $setup->getColumns(),
-                'index' => $setup->getName(),
+                'index'   => $setup->getName(),
             ];
             $blueprint->withIndex(new Fluent($index));
         }
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      * @todo: Support named foreign keys
      */
     protected function fillRelations(Blueprint $blueprint)
@@ -178,14 +166,14 @@ class Schema implements \Reliese\Meta\Schema
         $relations = $this->manager()->listTableForeignKeys($blueprint->table());
 
         foreach ($relations as $setup) {
-            $table = ['database' => '', 'table'=>$setup->getForeignTableName()];
+            $table = ['database' => '', 'table' => $setup->getForeignTableName()];
 
             $relation = [
-                'name' => 'foreign',
-                'index' => '',
-                'columns' => $setup->getColumns(),
+                'name'       => 'foreign',
+                'index'      => '',
+                'columns'    => $setup->getColumns(),
                 'references' => $setup->getForeignColumns(),
-                'on' => $table,
+                'on'         => $table,
             ];
 
             $blueprint->withRelation(new Fluent($relation));
@@ -211,17 +199,7 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @param string $table
-     *
-     * @return bool
-     */
-    public function has($table)
-    {
-        return array_key_exists($table, $this->tables);
-    }
-
-    /**
-     * @return \Reliese\Meta\Blueprint[]
+     * @return \Xptela\EloquentModelGenerator\Meta\Blueprint[]
      */
     public function tables()
     {
@@ -231,15 +209,25 @@ class Schema implements \Reliese\Meta\Schema
     /**
      * @param string $table
      *
-     * @return \Reliese\Meta\Blueprint
+     * @return \Xptela\EloquentModelGenerator\Meta\Blueprint
      */
     public function table($table)
     {
-        if (! $this->has($table)) {
+        if (!$this->has($table)) {
             throw new \InvalidArgumentException("Table [$table] does not belong to schema [{$this->schema}]");
         }
 
         return $this->tables[$table];
+    }
+
+    /**
+     * @param string $table
+     *
+     * @return bool
+     */
+    public function has($table)
+    {
+        return array_key_exists($table, $this->tables);
     }
 
     /**
@@ -251,7 +239,7 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $table
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $table
      *
      * @return array
      */
@@ -269,5 +257,17 @@ class Schema implements \Reliese\Meta\Schema
         }
 
         return $references;
+    }
+
+    /**
+     * Quick little hack since it is no longer possible to set PDO's fetch mode
+     * to PDO::FETCH_ASSOC.
+     *
+     * @param $data
+     * @return mixed
+     */
+    protected function arraify($data)
+    {
+        return json_decode(json_encode($data), true);
     }
 }

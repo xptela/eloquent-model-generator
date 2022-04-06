@@ -5,10 +5,20 @@
  * Date: 09/10/16 07:34 PM.
  */
 
-namespace Reliese\Database\Eloquent;
+namespace Xptela\EloquentModelGenerator\Database\Eloquent;
 
 trait BitBooleans
 {
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     */
+    public function fromBoolean($value)
+    {
+        return $this->fromBool($value);
+    }
+
     /**
      * @param mixed $value
      *
@@ -29,11 +39,11 @@ trait BitBooleans
     /**
      * @param mixed $value
      *
-     * @return bool
+     * @return mixed
      */
-    public function fromBoolean($value)
+    public function toBoolean($value)
     {
-        return $this->fromBool($value);
+        return $this->toBool($value);
     }
 
     /**
@@ -51,15 +61,5 @@ trait BitBooleans
         }
 
         return $value;
-    }
-
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    public function toBoolean($value)
-    {
-        return $this->toBool($value);
     }
 }

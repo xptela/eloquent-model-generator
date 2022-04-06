@@ -5,35 +5,33 @@
  * Date: 18/09/16 08:36 PM.
  */
 
-namespace Reliese\Meta\MySql;
+namespace Xptela\EloquentModelGenerator\Meta\MySql;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Fluent;
+use Illuminate\Support\Str;
 
-class Column implements \Reliese\Meta\Column
+class Column implements \Xptela\EloquentModelGenerator\Meta\Column
 {
     /**
      * @var array
      */
+    public static $mappings = [
+        'string'  => ['varchar', 'text', 'string', 'char', 'enum', 'tinytext', 'mediumtext', 'longtext', 'longblob', 'mediumblob', 'tinyblob', 'blob'],
+        'date'    => ['datetime', 'year', 'date', 'time', 'timestamp'],
+        'int'     => ['bigint', 'int', 'integer', 'tinyint', 'smallint', 'mediumint'],
+        'float'   => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
+        'boolean' => ['bit']
+    ];
+    /**
+     * @var array
+     */
     protected $metadata;
-
     /**
      * @var array
      */
     protected $metas = [
         'type', 'name', 'autoincrement', 'nullable', 'default', 'comment',
-    ];
-
-    /**
-     * @var array
-     */
-    public static $mappings = [
-        'string' => ['varchar', 'text', 'string', 'char', 'enum', 'tinytext', 'mediumtext', 'longtext', 'longblob', 'mediumblob', 'tinyblob', 'blob'],
-        'date' => ['datetime', 'year', 'date', 'time', 'timestamp'],
-        'int' => ['bigint', 'int', 'integer', 'tinyint', 'smallint', 'mediumint'],
-        'float' => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
-        'boolean' => ['bit']
     ];
 
     /**
@@ -54,7 +52,7 @@ class Column implements \Reliese\Meta\Column
         $attributes = new Fluent();
 
         foreach ($this->metas as $meta) {
-            $this->{'parse'.ucfirst($meta)}($attributes);
+            $this->{'parse' . ucfirst($meta)}($attributes);
         }
 
         return $attributes;
@@ -69,7 +67,7 @@ class Column implements \Reliese\Meta\Column
 
         preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $type, $matches);
 
-        $dataType = strtolower($matches[1]);
+        $dataType           = strtolower($matches[1]);
         $attributes['type'] = $dataType;
 
         foreach (static::$mappings as $phpType => $database) {
@@ -88,6 +86,17 @@ class Column implements \Reliese\Meta\Column
     }
 
     /**
+     * @param string $key
+     * @param mixed $default
+     *
+     * @return mixed
+     */
+    protected function get($key, $default = null)
+    {
+        return Arr::get($this->metadata, $key, $default);
+    }
+
+    /**
      * @param string $databaseType
      * @param string $precision
      * @param \Illuminate\Support\Fluent $attributes
@@ -103,7 +112,7 @@ class Column implements \Reliese\Meta\Column
             return;
         }
 
-        $size = (int) current($precision);
+        $size = (int)current($precision);
 
         // Check whether it's a boolean
         if ($size == 1 && in_array($databaseType, ['bit', 'tinyint'])) {
@@ -120,7 +129,7 @@ class Column implements \Reliese\Meta\Column
         $attributes['size'] = $size;
 
         if ($scale = next($precision)) {
-            $attributes['scale'] = (int) $scale;
+            $attributes['scale'] = (int)$scale;
         }
     }
 
@@ -140,6 +149,17 @@ class Column implements \Reliese\Meta\Column
         if ($this->same('Extra', 'auto_increment')) {
             $attributes['autoincrement'] = true;
         }
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     *
+     * @return bool
+     */
+    protected function same($key, $value)
+    {
+        return strcasecmp($this->get($key, ''), $value) === 0;
     }
 
     /**
@@ -164,27 +184,5 @@ class Column implements \Reliese\Meta\Column
     protected function parseComment(Fluent $attributes)
     {
         $attributes['comment'] = $this->get('Comment');
-    }
-
-    /**
-     * @param string $key
-     * @param mixed $default
-     *
-     * @return mixed
-     */
-    protected function get($key, $default = null)
-    {
-        return Arr::get($this->metadata, $key, $default);
-    }
-
-    /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return bool
-     */
-    protected function same($key, $value)
-    {
-        return strcasecmp($this->get($key, ''), $value) === 0;
     }
 }

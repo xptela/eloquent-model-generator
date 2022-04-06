@@ -5,14 +5,14 @@
  * Date: 05/10/16 11:47 PM.
  */
 
-namespace Reliese\Coders\Model\Relations;
+namespace Xptela\EloquentModelGenerator\Coders\Model\Relations;
 
-use Illuminate\Support\Str;
-use Reliese\Support\Dumper;
-use Illuminate\Support\Fluent;
-use Reliese\Coders\Model\Model;
-use Reliese\Coders\Model\Relation;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Fluent;
+use Illuminate\Support\Str;
+use Xptela\EloquentModelGenerator\Coders\Model\Model;
+use Xptela\EloquentModelGenerator\Coders\Model\Relation;
+use Xptela\EloquentModelGenerator\Support\Dumper;
 
 class BelongsToMany implements Relation
 {
@@ -27,17 +27,17 @@ class BelongsToMany implements Relation
     protected $referenceCommand;
 
     /**
-     * @var \Reliese\Coders\Model\Model
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     protected $parent;
 
     /**
-     * @var \Reliese\Coders\Model\Model
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     protected $pivot;
 
     /**
-     * @var \Reliese\Coders\Model\Model
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     protected $reference;
 
@@ -46,22 +46,23 @@ class BelongsToMany implements Relation
      *
      * @param \Illuminate\Support\Fluent $parentCommand
      * @param \Illuminate\Support\Fluent $referenceCommand
-     * @param \Reliese\Coders\Model\Model $parent
-     * @param \Reliese\Coders\Model\Model $pivot
-     * @param \Reliese\Coders\Model\Model $reference
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $parent
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $pivot
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $reference
      */
     public function __construct(
         Fluent $parentCommand,
         Fluent $referenceCommand,
-        Model $parent,
-        Model $pivot,
-        Model $reference
-    ) {
-        $this->parentCommand = $parentCommand;
+        Model  $parent,
+        Model  $pivot,
+        Model  $reference
+    )
+    {
+        $this->parentCommand    = $parentCommand;
         $this->referenceCommand = $referenceCommand;
-        $this->parent = $parent;
-        $this->pivot = $pivot;
-        $this->reference = $reference;
+        $this->parent           = $parent;
+        $this->pivot            = $pivot;
+        $this->reference        = $reference;
     }
 
     /**
@@ -69,7 +70,7 @@ class BelongsToMany implements Relation
      */
     public function hint()
     {
-        return '\\'.Collection::class.'|'.$this->reference->getQualifiedUserClassName().'[]';
+        return '\\' . Collection::class . '|' . $this->reference->getQualifiedUserClassName() . '[]';
     }
 
     /**
@@ -99,32 +100,32 @@ class BelongsToMany implements Relation
     {
         $body = 'return $this->belongsToMany(';
 
-        $body .= $this->reference->getQualifiedUserClassName().'::class';
+        $body .= $this->reference->getQualifiedUserClassName() . '::class';
 
         if ($this->needsPivotTable()) {
-            $body .= ', '.Dumper::export($this->pivotTable());
+            $body .= ', ' . Dumper::export($this->pivotTable());
         }
 
         if ($this->needsForeignKey()) {
             $foreignKey = $this->parent->usesPropertyConstants()
-                ? $this->reference->getQualifiedUserClassName().'::'.strtoupper($this->foreignKey())
+                ? $this->reference->getQualifiedUserClassName() . '::' . strtoupper($this->foreignKey())
                 : $this->foreignKey();
-            $body .= ', '.Dumper::export($foreignKey);
+            $body       .= ', ' . Dumper::export($foreignKey);
         }
 
         if ($this->needsOtherKey()) {
             $otherKey = $this->reference->usesPropertyConstants()
-                ? $this->reference->getQualifiedUserClassName().'::'.strtoupper($this->otherKey())
+                ? $this->reference->getQualifiedUserClassName() . '::' . strtoupper($this->otherKey())
                 : $this->otherKey();
-            $body .= ', '.Dumper::export($otherKey);
+            $body     .= ', ' . Dumper::export($otherKey);
         }
 
         $body .= ')';
 
         $fields = $this->getPivotFields();
 
-        if (! empty($fields)) {
-            $body .= "\n\t\t\t\t\t->withPivot(".$this->parametrize($fields).')';
+        if (!empty($fields)) {
+            $body .= "\n\t\t\t\t\t->withPivot(" . $this->parametrize($fields) . ')';
         }
 
         if ($this->pivot->usesTimestamps()) {
@@ -137,14 +138,6 @@ class BelongsToMany implements Relation
     }
 
     /**
-     * @return string
-     */
-    public function returnType()
-    {
-        return \Illuminate\Database\Eloquent\Relations\BelongsToMany::class;
-    }
-
-    /**
      * @return bool
      */
     protected function needsPivotTable()
@@ -154,6 +147,24 @@ class BelongsToMany implements Relation
         $defaultPivotTable = strtolower(implode('_', $models));
 
         return $this->pivotTable() != $defaultPivotTable || $this->needsForeignKey();
+    }
+
+    /**
+     * @return string
+     */
+    protected function referenceRecordName()
+    {
+        // We make sure it is snake case because Eloquent assumes it is.
+        return Str::snake($this->reference->getRecordName());
+    }
+
+    /**
+     * @return string
+     */
+    protected function parentRecordName()
+    {
+        // We make sure it is snake case because Eloquent assumes it is.
+        return Str::snake($this->parent->getRecordName());
     }
 
     /**
@@ -173,7 +184,7 @@ class BelongsToMany implements Relation
      */
     protected function needsForeignKey()
     {
-        $defaultForeignKey = $this->parentRecordName().'_id';
+        $defaultForeignKey = $this->parentRecordName() . '_id';
 
         return $this->foreignKey() != $defaultForeignKey || $this->needsOtherKey();
     }
@@ -191,7 +202,7 @@ class BelongsToMany implements Relation
      */
     protected function needsOtherKey()
     {
-        $defaultOtherKey = $this->referenceRecordName().'_id';
+        $defaultOtherKey = $this->referenceRecordName() . '_id';
 
         return $this->otherKey() != $defaultOtherKey;
     }
@@ -215,36 +226,26 @@ class BelongsToMany implements Relation
     }
 
     /**
-     * @return string
-     */
-    protected function parentRecordName()
-    {
-        // We make sure it is snake case because Eloquent assumes it is.
-        return Str::snake($this->parent->getRecordName());
-    }
-
-    /**
-     * @return string
-     */
-    protected function referenceRecordName()
-    {
-        // We make sure it is snake case because Eloquent assumes it is.
-        return Str::snake($this->reference->getRecordName());
-    }
-
-    /**
      * @param array $fields
      *
      * @return string
      */
     private function parametrize($fields = [])
     {
-        return (string) implode(', ', array_map(function ($field) {
+        return (string)implode(', ', array_map(function ($field) {
             $field = $this->reference->usesPropertyConstants()
-                ? $this->pivot->getQualifiedUserClassName().'::'.strtoupper($field)
+                ? $this->pivot->getQualifiedUserClassName() . '::' . strtoupper($field)
                 : $field;
 
             return Dumper::export($field);
         }, $fields));
+    }
+
+    /**
+     * @return string
+     */
+    public function returnType()
+    {
+        return \Illuminate\Database\Eloquent\Relations\BelongsToMany::class;
     }
 }

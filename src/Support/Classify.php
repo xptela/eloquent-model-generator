@@ -5,7 +5,7 @@
  * Date: 05/09/16 11:27 PM.
  */
 
-namespace Reliese\Support;
+namespace Xptela\EloquentModelGenerator\Support;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -49,10 +49,10 @@ class Classify
      */
     public function field($name, $value, $options = [])
     {
-        $value = Dumper::export($value);
-        $before = Arr::get($options, 'before', '');
+        $value      = Dumper::export($value);
+        $before     = Arr::get($options, 'before', '');
         $visibility = Arr::get($options, 'visibility', 'protected');
-        $after = Arr::get($options, 'after', "\n");
+        $after      = Arr::get($options, 'after', "\n");
 
         return "$before\t$visibility \$$name = $value;$after";
     }
@@ -66,9 +66,9 @@ class Classify
      */
     public function method($name, $body, $options = [])
     {
-        $visibility = Arr::get($options, 'visibility', 'public');
-        $returnType = Arr::get($options, 'returnType', null);
-        $formattedReturnType = $returnType ? ': '.$returnType : '';
+        $visibility          = Arr::get($options, 'visibility', 'public');
+        $returnType          = Arr::get($options, 'returnType', null);
+        $formattedReturnType = $returnType ? ': ' . $returnType : '';
 
         return "\n\t$visibility function $name()$formattedReturnType\n\t{\n\t\t$body\n\t}\n";
     }

@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use Reliese\Coders\Model\Config;
-use Reliese\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Coders\Model\Config;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 class ConfigTest extends TestCase
 {
@@ -29,7 +29,7 @@ class ConfigTest extends TestCase
     public function provideDataForTestGet()
     {
         return [
-            'Basic Key' => [
+            'Basic Key'                                         => [
                 [
                     '*' => [
                         'Key' => 'Value'
@@ -38,7 +38,7 @@ class ConfigTest extends TestCase
                 'Key',
                 'Value'
             ],
-            'Schema Key' => [
+            'Schema Key'                                        => [
                 [
                     'test' => [
                         'schemaKey' => 'Schema Value'
@@ -47,7 +47,7 @@ class ConfigTest extends TestCase
                 'schemaKey',
                 'Schema Value'
             ],
-            'Qualified Table Key' => [
+            'Qualified Table Key'                               => [
                 [
                     'test' => [
                         'qfKey' => 'Qualified Table Value'
@@ -56,7 +56,7 @@ class ConfigTest extends TestCase
                 'qfKey',
                 'Qualified Table Value'
             ],
-            'Connection Basic Key' => [
+            'Connection Basic Key'                              => [
                 [
                     '@connections' => [
                         'test_connection' => [
@@ -67,7 +67,7 @@ class ConfigTest extends TestCase
                 'cKey',
                 'Connection Value'
             ],
-            'Connection Schema Key' => [
+            'Connection Schema Key'                             => [
                 [
                     '@connections' => [
                         'test_connection' => [
@@ -80,7 +80,7 @@ class ConfigTest extends TestCase
                 'csKey',
                 'Connection Schema Value'
             ],
-            'Connection Table Key' => [
+            'Connection Table Key'                              => [
                 [
                     '@connections' => [
                         'test_connection' => [
@@ -93,9 +93,9 @@ class ConfigTest extends TestCase
                 'ctKey',
                 'Connection Table Value'
             ],
-            'Test Hierarchy Override for Schema' => [
+            'Test Hierarchy Override for Schema'                => [
                 [
-                    '*' => [
+                    '*'    => [
                         'FirstKey' => 'Some Value'
                     ],
                     'test' => [
@@ -105,9 +105,9 @@ class ConfigTest extends TestCase
                 'FirstKey',
                 'A Second Value'
             ],
-            'Test Hierarchy Override for Qualified Table' => [
+            'Test Hierarchy Override for Qualified Table'       => [
                 [
-                    '*' => [
+                    '*'    => [
                         'FirstKey' => 'Some Value'
                     ],
                     'test' => [
@@ -120,12 +120,12 @@ class ConfigTest extends TestCase
                 'FirstKey',
                 'A Third Value'
             ],
-            'Test Hierarchy Override for Connection Basic Key' => [
+            'Test Hierarchy Override for Connection Basic Key'  => [
                 [
-                    '*' => [
+                    '*'            => [
                         'FirstKey' => 'Some Value'
                     ],
-                    'test' => [
+                    'test'         => [
                         'FirstKey' => 'A Second Value',
                         'my_table' => [
                             'FirstKey' => 'A Third Value'
@@ -142,10 +142,10 @@ class ConfigTest extends TestCase
             ],
             'Test Hierarchy Override for Connection Schema Key' => [
                 [
-                    '*' => [
+                    '*'            => [
                         'FirstKey' => 'Some Value'
                     ],
-                    'test' => [
+                    'test'         => [
                         'FirstKey' => 'A Second Value',
                         'my_table' => [
                             'FirstKey' => 'A Third Value'
@@ -163,12 +163,12 @@ class ConfigTest extends TestCase
                 'FirstKey',
                 'A Fifth Value'
             ],
-            'Test Hierarchy Override for Connection Table Key' => [
+            'Test Hierarchy Override for Connection Table Key'  => [
                 [
-                    '*' => [
+                    '*'            => [
                         'FirstKey' => 'Some Value'
                     ],
-                    'test' => [
+                    'test'         => [
                         'FirstKey' => 'A Second Value',
                         'my_table' => [
                             'FirstKey' => 'A Third Value'
@@ -177,7 +177,7 @@ class ConfigTest extends TestCase
                     '@connections' => [
                         'test_connection' => [
                             'FirstKey' => 'A Fourth Value',
-                            'test' => [
+                            'test'     => [
                                 'FirstKey' => 'A Fifth Value',
                             ],
                             'my_table' => [

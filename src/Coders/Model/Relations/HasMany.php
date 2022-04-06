@@ -5,10 +5,10 @@
  * Date: 11/09/16 09:26 PM.
  */
 
-namespace Reliese\Coders\Model\Relations;
+namespace Xptela\EloquentModelGenerator\Coders\Model\Relations;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class HasMany extends HasOneOrMany
 {
@@ -17,7 +17,7 @@ class HasMany extends HasOneOrMany
      */
     public function hint()
     {
-        return '\\'.Collection::class.'|'.$this->related->getQualifiedUserClassName().'[]';
+        return '\\' . Collection::class . '|' . $this->related->getQualifiedUserClassName() . '[]';
     }
 
     /**

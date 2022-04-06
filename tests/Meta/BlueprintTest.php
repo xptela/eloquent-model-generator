@@ -1,6 +1,6 @@
 <?php
 
-use Reliese\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 /**
  * Created by Cristian.

@@ -1,10 +1,10 @@
 <?php
 
-namespace Reliese\Coders\Console;
+namespace Xptela\EloquentModelGenerator\Coders\Console;
 
 use Illuminate\Console\Command;
-use Reliese\Coders\Model\Factory;
 use Illuminate\Contracts\Config\Repository;
+use Xptela\EloquentModelGenerator\Coders\Model\Factory;
 
 class CodeModelsCommand extends Command
 {
@@ -26,7 +26,7 @@ class CodeModelsCommand extends Command
     protected $description = 'Parse connection schema into models';
 
     /**
-     * @var \Reliese\Coders\Model\Factory
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Factory
      */
     protected $models;
 
@@ -38,7 +38,7 @@ class CodeModelsCommand extends Command
     /**
      * Create a new command instance.
      *
-     * @param \Reliese\Coders\Model\Factory $models
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Factory $models
      * @param \Illuminate\Contracts\Config\Repository $config
      */
     public function __construct(Factory $models, Repository $config)
@@ -55,16 +55,14 @@ class CodeModelsCommand extends Command
     public function handle()
     {
         $connection = $this->getConnection();
-        $schema = $this->getSchema($connection);
-        $table = $this->getTable();
+        $schema     = $this->getSchema($connection);
+        $table      = $this->getTable();
 
         // Check whether we just need to generate one table
         if ($table) {
             $this->models->on($connection)->create($schema, $table);
             $this->info("Check out your models for $table");
-        }
-
-        // Otherwise map the whole database
+        } // Otherwise map the whole database
         else {
             $this->models->on($connection)->map($schema);
             $this->info("Check out your models for $schema");

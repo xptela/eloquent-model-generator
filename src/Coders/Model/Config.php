@@ -5,10 +5,10 @@
  * Date: 11/09/16 09:00 PM.
  */
 
-namespace Reliese\Coders\Model;
+namespace Xptela\EloquentModelGenerator\Coders\Model;
 
 use Illuminate\Support\Arr;
-use Reliese\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 class Config
 {
@@ -28,7 +28,7 @@ class Config
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      * @param string $key
      * @param mixed $default
      *

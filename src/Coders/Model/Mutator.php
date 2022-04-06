@@ -5,9 +5,9 @@
  * Date: 10/10/16 11:46 PM.
  */
 
-namespace Reliese\Coders\Model;
+namespace Xptela\EloquentModelGenerator\Coders\Model;
 
-use Reliese\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 class Mutator
 {
@@ -40,7 +40,7 @@ class Mutator
 
     /**
      * @param string $column
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      *
      * @return mixed
      */
@@ -63,7 +63,7 @@ class Mutator
 
     /**
      * @param string $attribute
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return string
      */
@@ -86,7 +86,7 @@ class Mutator
 
     /**
      * @param string $attribute
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return string
      */

@@ -5,70 +5,64 @@
  * Date: 19/09/16 11:58 PM.
  */
 
-namespace Reliese\Coders\Model;
+namespace Xptela\EloquentModelGenerator\Coders\Model;
 
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Reliese\Meta\Blueprint;
-use Reliese\Meta\SchemaManager;
-use Reliese\Support\Classify;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Meta\SchemaManager;
+use Xptela\EloquentModelGenerator\Support\Classify;
 
 class Factory
 {
+    /**
+     * @var \Xptela\EloquentModelGenerator\Meta\SchemaManager
+     */
+    protected $schemas = [];
+    /**
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    protected $files;
+    /**
+     * @var \Xptela\EloquentModelGenerator\Support\Classify
+     */
+    protected $class;
+    /**
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Config
+     */
+    protected $config;
+    /**
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\ModelManager
+     */
+    protected $models;
+    /**
+     * @var \Xptela\EloquentModelGenerator\Coders\Model\Mutator[]
+     */
+    protected $mutators = [];
     /**
      * @var \Illuminate\Database\DatabaseManager
      */
     private $db;
 
     /**
-     * @var \Reliese\Meta\SchemaManager
-     */
-    protected $schemas = [];
-
-    /**
-     * @var \Illuminate\Filesystem\Filesystem
-     */
-    protected $files;
-
-    /**
-     * @var \Reliese\Support\Classify
-     */
-    protected $class;
-
-    /**
-     * @var \Reliese\Coders\Model\Config
-     */
-    protected $config;
-
-    /**
-     * @var \Reliese\Coders\Model\ModelManager
-     */
-    protected $models;
-
-    /**
-     * @var \Reliese\Coders\Model\Mutator[]
-     */
-    protected $mutators = [];
-
-    /**
      * ModelsFactory constructor.
      *
      * @param \Illuminate\Database\DatabaseManager $db
      * @param \Illuminate\Filesystem\Filesystem $files
-     * @param \Reliese\Support\Classify $writer
-     * @param \Reliese\Coders\Model\Config $config
+     * @param \Xptela\EloquentModelGenerator\Support\Classify $writer
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Config $config
      */
     public function __construct(DatabaseManager $db, Filesystem $files, Classify $writer, Config $config)
     {
-        $this->db = $db;
-        $this->files = $files;
+        $this->db     = $db;
+        $this->files  = $files;
         $this->config = $config;
-        $this->class = $writer;
+        $this->class  = $writer;
     }
 
     /**
-     * @return \Reliese\Coders\Model\Mutator
+     * @return \Xptela\EloquentModelGenerator\Coders\Model\Mutator
      */
     public function mutate()
     {
@@ -76,15 +70,21 @@ class Factory
     }
 
     /**
-     * @return \Reliese\Coders\Model\ModelManager
+     * @param string $schema
      */
-    protected function models()
+    public function map($schema)
     {
-        if (! isset($this->models)) {
-            $this->models = new ModelManager($this);
+        if (!isset($this->schemas)) {
+            $this->on();
         }
 
-        return $this->models;
+        $mapper = $this->makeSchema($schema);
+
+        foreach ($mapper->tables() as $blueprint) {
+            if ($this->shouldTakeOnly($blueprint) && $this->shouldNotExclude($blueprint)) {
+                $this->create($mapper->schema(), $blueprint->table());
+            }
+        }
     }
 
     /**
@@ -103,40 +103,16 @@ class Factory
 
     /**
      * @param string $schema
-     */
-    public function map($schema)
-    {
-        if (! isset($this->schemas)) {
-            $this->on();
-        }
-
-        $mapper = $this->makeSchema($schema);
-
-        foreach ($mapper->tables() as $blueprint) {
-            if ($this->shouldTakeOnly($blueprint) && $this->shouldNotExclude($blueprint)) {
-                $this->create($mapper->schema(), $blueprint->table());
-            }
-        }
-    }
-
-    /**
-     * @param \Reliese\Meta\Blueprint $blueprint
      *
-     * @return bool
+     * @return \Xptela\EloquentModelGenerator\Meta\Schema
      */
-    protected function shouldNotExclude(Blueprint $blueprint)
+    public function makeSchema($schema)
     {
-        foreach ($this->config($blueprint, 'except', []) as $pattern) {
-            if (Str::is($pattern, $blueprint->table())) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->schemas->make($schema);
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint $blueprint
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
      *
      * @return bool
      */
@@ -156,12 +132,44 @@ class Factory
     }
 
     /**
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint|null $blueprint
+     * @param string $key
+     * @param mixed $default
+     *
+     * @return mixed|\Xptela\EloquentModelGenerator\Coders\Model\Config
+     */
+    public function config(Blueprint $blueprint = null, $key = null, $default = null)
+    {
+        if (is_null($blueprint)) {
+            return $this->config;
+        }
+
+        return $this->config->get($blueprint, $key, $default);
+    }
+
+    /**
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $blueprint
+     *
+     * @return bool
+     */
+    protected function shouldNotExclude(Blueprint $blueprint)
+    {
+        foreach ($this->config($blueprint, 'except', []) as $pattern) {
+            if (Str::is($pattern, $blueprint->table())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param string $schema
      * @param string $table
      */
     public function create($schema, $table)
     {
-        $model = $this->makeModel($schema, $table);
+        $model    = $this->makeModel($schema, $table);
         $template = $this->prepareTemplate($model, 'model');
 
         $file = $this->fillTemplate($template, $model);
@@ -183,7 +191,7 @@ class Factory
      *
      * @param bool $withRelations
      *
-     * @return \Reliese\Coders\Model\Model
+     * @return \Xptela\EloquentModelGenerator\Coders\Model\Model
      */
     public function makeModel($schema, $table, $withRelations = true)
     {
@@ -191,44 +199,19 @@ class Factory
     }
 
     /**
-     * @param string $schema
-     *
-     * @return \Reliese\Meta\Schema
+     * @return \Xptela\EloquentModelGenerator\Coders\Model\ModelManager
      */
-    public function makeSchema($schema)
+    protected function models()
     {
-        return $this->schemas->make($schema);
+        if (!isset($this->models)) {
+            $this->models = new ModelManager($this);
+        }
+
+        return $this->models;
     }
 
     /**
-     * @param \Reliese\Coders\Model\Model $model
-     *
-     * @todo: Delegate workload to SchemaManager and ModelManager
-     *
-     * @return array
-     */
-    public function referencing(Model $model)
-    {
-        $references = [];
-
-        // TODO: SchemaManager should do this
-        foreach ($this->schemas as $schema) {
-            $references = array_merge($references, $schema->referencing($model->getBlueprint()));
-        }
-
-        // TODO: ModelManager should do this
-        foreach ($references as &$related) {
-            $blueprint = $related['blueprint'];
-            $related['model'] = $model->getBlueprint()->is($blueprint->schema(), $blueprint->table())
-                ? $model
-                : $this->makeModel($blueprint->schema(), $blueprint->table(), false);
-        }
-
-        return $references;
-    }
-
-    /**
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      * @param string $name
      *
      * @return string
@@ -237,14 +220,24 @@ class Factory
     protected function prepareTemplate(Model $model, $name)
     {
         $defaultFile = $this->path([__DIR__, 'Templates', $name]);
-        $file = $this->config($model->getBlueprint(), "*.template.$name", $defaultFile);
+        $file        = $this->config($model->getBlueprint(), "*.template.$name", $defaultFile);
 
         return $this->files->get($file);
     }
 
     /**
+     * @param array $pieces
+     *
+     * @return string
+     */
+    protected function path($pieces)
+    {
+        return implode(DIRECTORY_SEPARATOR, (array)$pieces);
+    }
+
+    /**
      * @param string $template
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return mixed
      */
@@ -253,99 +246,26 @@ class Factory
         $template = str_replace('{{namespace}}', $model->getBaseNamespace(), $template);
         $template = str_replace('{{class}}', $model->getClassName(), $template);
 
-        $properties = $this->properties($model);
+        $properties   = $this->properties($model);
         $dependencies = $this->shortenAndExtractImportableDependencies($properties, $model);
-        $template = str_replace('{{properties}}', $properties, $template);
+        $template     = str_replace('{{properties}}', $properties, $template);
 
-        $parentClass = $model->getParentClass();
+        $parentClass  = $model->getParentClass();
         $dependencies = array_merge($dependencies, $this->shortenAndExtractImportableDependencies($parentClass, $model));
-        $template = str_replace('{{parent}}', $parentClass, $template);
+        $template     = str_replace('{{parent}}', $parentClass, $template);
 
-        $body = $this->body($model);
+        $body         = $this->body($model);
         $dependencies = array_merge($dependencies, $this->shortenAndExtractImportableDependencies($body, $model));
-        $template = str_replace('{{body}}', $body, $template);
+        $template     = str_replace('{{body}}', $body, $template);
 
-        $imports = $this->imports(array_keys($dependencies), $model);
+        $imports  = $this->imports(array_keys($dependencies), $model);
         $template = str_replace('{{imports}}', $imports, $template);
 
         return $template;
     }
 
     /**
-     * Returns imports section for model.
-     *
-     * @param array $dependencies Array of imported classes
-     * @param Model $model
-     * @return string
-     */
-    private function imports($dependencies, Model $model)
-    {
-        $imports = [];
-        foreach ($dependencies as $dependencyClass) {
-            // Skip when the same class
-            if (trim($dependencyClass, "\\") == trim($model->getQualifiedUserClassName(), "\\")) {
-                continue;
-            }
-
-            // Do not import classes from same namespace
-            $inCurrentNamespacePattern = str_replace('\\', '\\\\', "/{$model->getBaseNamespace()}\\[a-zA-Z0-9_]*/");
-            if (preg_match($inCurrentNamespacePattern, $dependencyClass)) {
-                continue;
-            }
-
-            $imports[] = "use {$dependencyClass};";
-        }
-
-        sort($imports);
-
-        return implode("\n", $imports);
-    }
-
-    /**
-     * Extract and replace fully-qualified class names from placeholder.
-     *
-     * @param string $placeholder Placeholder to extract class names from. Rewrites value to content without FQN
-     * @param \Reliese\Coders\Model\Model $model
-     *
-     * @return array Extracted FQN
-     */
-    private function shortenAndExtractImportableDependencies(&$placeholder, $model)
-    {
-        $qualifiedClassesPattern = '/([\\\\a-zA-Z0-9_]*\\\\[\\\\a-zA-Z0-9_]*)/';
-        $matches = [];
-        $importableDependencies = [];
-        if (preg_match_all($qualifiedClassesPattern, $placeholder, $matches)) {
-            foreach ($matches[1] as $usedClass) {
-                $namespacePieces = explode('\\', $usedClass);
-                $className = array_pop($namespacePieces);
-
-                /**
-                 * Avoid breaking same-model relationships when using base classes
-                 *
-                 * @see https://github.com/reliese/laravel/issues/209
-                 */
-                if ($model->usesBaseFiles() && $usedClass === $model->getQualifiedUserClassName()) {
-                    continue;
-                }
-
-                //When same class name but different namespace, skip it.
-                if (
-                    $className == $model->getClassName() &&
-                    trim(implode('\\', $namespacePieces), '\\') != trim($model->getNamespace(), '\\')
-                ) {
-                    continue;
-                }
-
-                $importableDependencies[trim($usedClass, '\\')] = true;
-                $placeholder = str_replace($usedClass, $className, $placeholder);
-            }
-        }
-
-        return $importableDependencies;
-    }
-
-    /**
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return string
      */
@@ -368,14 +288,57 @@ class Factory
             if ($model->hasProperty($name)) {
                 continue;
             }
-            $annotations .= $this->class->annotation('property', $relation->hint()." \$$name");
+            $annotations .= $this->class->annotation('property', $relation->hint() . " \$$name");
         }
 
         return $annotations;
     }
 
     /**
-     * @param \Reliese\Coders\Model\Model $model
+     * Extract and replace fully-qualified class names from placeholder.
+     *
+     * @param string $placeholder Placeholder to extract class names from. Rewrites value to content without FQN
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
+     *
+     * @return array Extracted FQN
+     */
+    private function shortenAndExtractImportableDependencies(&$placeholder, $model)
+    {
+        $qualifiedClassesPattern = '/([\\\\a-zA-Z0-9_]*\\\\[\\\\a-zA-Z0-9_]*)/';
+        $matches                 = [];
+        $importableDependencies  = [];
+        if (preg_match_all($qualifiedClassesPattern, $placeholder, $matches)) {
+            foreach ($matches[1] as $usedClass) {
+                $namespacePieces = explode('\\', $usedClass);
+                $className       = array_pop($namespacePieces);
+
+                /**
+                 * Avoid breaking same-model relationships when using base classes
+                 *
+                 * @see https://github.com/reliese/laravel/issues/209
+                 */
+                if ($model->usesBaseFiles() && $usedClass === $model->getQualifiedUserClassName()) {
+                    continue;
+                }
+
+                //When same class name but different namespace, skip it.
+                if (
+                    $className == $model->getClassName() &&
+                    trim(implode('\\', $namespacePieces), '\\') != trim($model->getNamespace(), '\\')
+                ) {
+                    continue;
+                }
+
+                $importableDependencies[trim($usedClass, '\\')] = true;
+                $placeholder                                    = str_replace($usedClass, $className, $placeholder);
+            }
+        }
+
+        return $importableDependencies;
+    }
+
+    /**
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return string
      */
@@ -390,17 +353,17 @@ class Factory
         $excludedConstants = [];
 
         if ($model->hasCustomCreatedAtField()) {
-            $body .= $this->class->constant('CREATED_AT', $model->getCreatedAtField());
+            $body                .= $this->class->constant('CREATED_AT', $model->getCreatedAtField());
             $excludedConstants[] = $model->getCreatedAtField();
         }
 
         if ($model->hasCustomUpdatedAtField()) {
-            $body .= $this->class->constant('UPDATED_AT', $model->getUpdatedAtField());
+            $body                .= $this->class->constant('UPDATED_AT', $model->getUpdatedAtField());
             $excludedConstants[] = $model->getUpdatedAtField();
         }
 
         if ($model->hasCustomDeletedAtField()) {
-            $body .= $this->class->constant('DELETED_AT', $model->getDeletedAtField());
+            $body                .= $this->class->constant('DELETED_AT', $model->getDeletedAtField());
             $excludedConstants[] = $model->getDeletedAtField();
         }
 
@@ -411,13 +374,13 @@ class Factory
 
             foreach ($properties as $property) {
                 $constantName = Str::upper(Str::snake($property));
-                $body .= $this->class->constant($constantName, $property);
+                $body         .= $this->class->constant($constantName, $property);
             }
         }
 
         $body = trim($body, "\n");
         // Separate constants from fields only if there are constants.
-        if (! empty($body)) {
+        if (!empty($body)) {
             $body .= "\n";
         }
 
@@ -443,7 +406,7 @@ class Factory
             $body .= $this->class->field('perPage', $model->getPerPage());
         }
 
-        if (! $model->usesTimestamps()) {
+        if (!$model->usesTimestamps()) {
             $body .= $this->class->field('timestamps', false, ['visibility' => 'public']);
         }
 
@@ -484,7 +447,7 @@ class Factory
                 $constraint->name(),
                 $constraint->body(),
                 [
-                    'before' => "\n",
+                    'before'     => "\n",
                     'returnType' => $model->definesReturnTypes() ? $constraint->returnType() : null,
                 ]
             );
@@ -497,7 +460,37 @@ class Factory
     }
 
     /**
-     * @param \Reliese\Coders\Model\Model $model
+     * Returns imports section for model.
+     *
+     * @param array $dependencies Array of imported classes
+     * @param Model $model
+     * @return string
+     */
+    private function imports($dependencies, Model $model)
+    {
+        $imports = [];
+        foreach ($dependencies as $dependencyClass) {
+            // Skip when the same class
+            if (trim($dependencyClass, "\\") == trim($model->getQualifiedUserClassName(), "\\")) {
+                continue;
+            }
+
+            // Do not import classes from same namespace
+            $inCurrentNamespacePattern = str_replace('\\', '\\\\', "/{$model->getBaseNamespace()}\\[a-zA-Z0-9_]*/");
+            if (preg_match($inCurrentNamespacePattern, $dependencyClass)) {
+                continue;
+            }
+
+            $imports[] = "use {$dependencyClass};";
+        }
+
+        sort($imports);
+
+        return implode("\n", $imports);
+    }
+
+    /**
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      * @param array $custom
      *
      * @return string
@@ -506,35 +499,25 @@ class Factory
     {
         $modelsDirectory = $this->path(array_merge([$this->config($model->getBlueprint(), 'path')], $custom));
 
-        if (! $this->files->isDirectory($modelsDirectory)) {
+        if (!$this->files->isDirectory($modelsDirectory)) {
             $this->files->makeDirectory($modelsDirectory, 0755, true);
         }
 
-        return $this->path([$modelsDirectory, $model->getClassName().'.php']);
+        return $this->path([$modelsDirectory, $model->getClassName() . '.php']);
     }
 
     /**
-     * @param array $pieces
-     *
-     * @return string
-     */
-    protected function path($pieces)
-    {
-        return implode(DIRECTORY_SEPARATOR, (array) $pieces);
-    }
-
-    /**
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return bool
      */
     public function needsUserFile(Model $model)
     {
-        return ! $this->files->exists($this->modelPath($model)) && $model->usesBaseFiles();
+        return !$this->files->exists($this->modelPath($model)) && $model->usesBaseFiles();
     }
 
     /**
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -567,11 +550,11 @@ class Factory
      */
     private function getBaseClassName(Model $model)
     {
-        return 'Base'.$model->getClassName();
+        return 'Base' . $model->getClassName();
     }
 
     /**
-     * @param \Reliese\Coders\Model\Model $model
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
      * @return string
      */
@@ -594,18 +577,29 @@ class Factory
     }
 
     /**
-     * @param \Reliese\Meta\Blueprint|null $blueprint
-     * @param string $key
-     * @param mixed $default
+     * @param \Xptela\EloquentModelGenerator\Coders\Model\Model $model
      *
-     * @return mixed|\Reliese\Coders\Model\Config
+     * @return array
+     * @todo: Delegate workload to SchemaManager and ModelManager
+     *
      */
-    public function config(Blueprint $blueprint = null, $key = null, $default = null)
+    public function referencing(Model $model)
     {
-        if (is_null($blueprint)) {
-            return $this->config;
+        $references = [];
+
+        // TODO: SchemaManager should do this
+        foreach ($this->schemas as $schema) {
+            $references = array_merge($references, $schema->referencing($model->getBlueprint()));
         }
 
-        return $this->config->get($blueprint, $key, $default);
+        // TODO: ModelManager should do this
+        foreach ($references as &$related) {
+            $blueprint        = $related['blueprint'];
+            $related['model'] = $model->getBlueprint()->is($blueprint->schema(), $blueprint->table())
+                ? $model
+                : $this->makeModel($blueprint->schema(), $blueprint->table(), false);
+        }
+
+        return $references;
     }
 }

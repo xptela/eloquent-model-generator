@@ -1,21 +1,25 @@
 {
-    "name": "reliese/laravel",
-    "description": "Reliese Components for Laravel Framework code generation.",
-    "keywords": ["reliese", "laravel"],
-    "homepage": "http://cristianllanos.com",
+    "name": "xptela/eloquent-model-generator",
+    "description": "Eloquent Model Generator generates Eloquent models using database schema as a source.",
+    "keywords": [
+        "xptela",
+        "laravel",
+        "lumen"
+    ],
+    "homepage": "https://github.com/xptela",
     "support": {
-        "issues": "https://github.com/reliese/laravel/issues",
-        "source": "https://github.com/reliese/laravel"
+        "issues": "https://github.com/xptela/eloquent-model-generator/issues",
+        "source": "https://github.com/xptela/eloquent-model-generator"
     },
     "license": "MIT",
     "authors": [
         {
-            "name": "Cristian Llanos",
-            "email": "cristianllanos@outlook.com"
+            "name": "xptela",
+            "email": "xptela@gmail.com"
         }
     ],
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^8.0",
         "doctrine/dbal": ">=2.5",
         "illuminate/support": ">=5.1",
         "illuminate/database": ">=5.1",
@@ -30,7 +34,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Reliese\\": "src/"
+            "Xptela\\EloquentModelGenerator\\": "src/"
         }
     },
     "autoload-dev": {
@@ -44,7 +48,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Reliese\\Coders\\CodersServiceProvider"
+                "Xptela\\EloquentModelGenerator\\Coders\\CodersServiceProvider"
             ]
         }
     }

@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use Reliese\Coders\Model\Relations\RelationHelper;
+use Xptela\EloquentModelGenerator\Coders\Model\Relations\RelationHelper;
 
 class RelationHelperTest extends TestCase
 {

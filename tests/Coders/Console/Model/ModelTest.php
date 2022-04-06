@@ -1,45 +1,45 @@
 <?php
 
 use Illuminate\Support\Fluent;
-use Reliese\Coders\Model\Factory;
-use Reliese\Coders\Model\Model;
-use Reliese\Coders\Model\Relations\BelongsTo;
-use Reliese\Meta\Blueprint;
+use Xptela\EloquentModelGenerator\Coders\Model\Factory;
+use Xptela\EloquentModelGenerator\Coders\Model\Model;
+use Xptela\EloquentModelGenerator\Coders\Model\Relations\BelongsTo;
+use Xptela\EloquentModelGenerator\Meta\Blueprint;
 
 class ModelTest extends TestCase
 {
     public function dataForTestPhpTypeHint()
     {
         return [
-            'Non-nullable int' => [
+            'Non-nullable int'  => [
                 'castType' => 'int',
                 'nullable' => false,
-                'expect' => 'int',
+                'expect'   => 'int',
             ],
-            'Nullable int' => [
+            'Nullable int'      => [
                 'castType' => 'int',
                 'nullable' => true,
-                'expect' => 'int|null',
+                'expect'   => 'int|null',
             ],
             'Non-nullable json' => [
                 'castType' => 'json',
                 'nullable' => false,
-                'expect' => 'array',
+                'expect'   => 'array',
             ],
-            'Nullable json' => [
+            'Nullable json'     => [
                 'castType' => 'json',
                 'nullable' => true,
-                'expect' => 'array|null',
+                'expect'   => 'array|null',
             ],
             'Non-nullable date' => [
                 'castType' => 'date',
                 'nullable' => false,
-                'expect' => '\Carbon\Carbon',
+                'expect'   => '\Carbon\Carbon',
             ],
-            'Nullable date' => [
+            'Nullable date'     => [
                 'castType' => 'date',
                 'nullable' => true,
-                'expect' => '\Carbon\Carbon|null',
+                'expect'   => '\Carbon\Carbon|null',
             ],
         ];
     }
@@ -58,8 +58,8 @@ class ModelTest extends TestCase
             new Factory(
                 \Mockery::mock(\Illuminate\Database\DatabaseManager::class),
                 \Mockery::mock(Illuminate\Filesystem\Filesystem::class),
-                \Mockery::mock(\Reliese\Support\Classify::class),
-                new \Reliese\Coders\Model\Config()
+                \Mockery::mock(\Xptela\EloquentModelGenerator\Support\Classify::class),
+                new \Xptela\EloquentModelGenerator\Coders\Model\Config()
             )
         );
 
@@ -95,8 +95,8 @@ class ModelTest extends TestCase
             new Factory(
                 \Mockery::mock(\Illuminate\Database\DatabaseManager::class),
                 \Mockery::mock(Illuminate\Filesystem\Filesystem::class),
-                \Mockery::mock(\Reliese\Support\Classify::class),
-                new \Reliese\Coders\Model\Config()
+                \Mockery::mock(\Xptela\EloquentModelGenerator\Support\Classify::class),
+                new \Xptela\EloquentModelGenerator\Coders\Model\Config()
             )
         );
 

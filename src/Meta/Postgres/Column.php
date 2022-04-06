@@ -1,6 +1,6 @@
 <?php
 
-namespace Reliese\Meta\Postgres;
+namespace Xptela\EloquentModelGenerator\Meta\Postgres;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Fluent;
@@ -9,31 +9,29 @@ use Illuminate\Support\Fluent;
  * Created by rwdim from cristians MySql original.
  * Date: 25/08/18 04:20 PM.
  */
-class Column implements \Reliese\Meta\Column
+class Column implements \Xptela\EloquentModelGenerator\Meta\Column
 {
-    /**
-     * @var array
-     */
-    protected $metadata;
-
-    /**
-     * @var array
-     */
-    protected $metas = [
-      'type', 'name', 'autoincrement', 'nullable', 'default', 'comment',
-    ];
-
     /**
      * @var array
      * @todo check these
      */
     public static $mappings = [
-      'string' => ['character varying', 'varchar', 'text', 'string', 'char', 'character','enum', 'tinytext', 'mediumtext', 'longtext', 'json'],
-      'date' => ['timestamp with time zone', 'timestamp without time zone', 'timestamptz', 'datetime', 'year', 'date', 'time', 'timestamp'],
-      'int' => ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 'bigserial', 'serial', 'smallserial', 'tinyserial', 'serial4', 'serial8'],
-      'float' => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
-      'boolean' => ['boolean', 'bool', 'bit'],
-      'binary' => ['blob', 'longblob', 'jsonb'],
+        'string'  => ['character varying', 'varchar', 'text', 'string', 'char', 'character', 'enum', 'tinytext', 'mediumtext', 'longtext', 'json'],
+        'date'    => ['timestamp with time zone', 'timestamp without time zone', 'timestamptz', 'datetime', 'year', 'date', 'time', 'timestamp'],
+        'int'     => ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 'bigserial', 'serial', 'smallserial', 'tinyserial', 'serial4', 'serial8'],
+        'float'   => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
+        'boolean' => ['boolean', 'bool', 'bit'],
+        'binary'  => ['blob', 'longblob', 'jsonb'],
+    ];
+    /**
+     * @var array
+     */
+    protected $metadata;
+    /**
+     * @var array
+     */
+    protected $metas = [
+        'type', 'name', 'autoincrement', 'nullable', 'default', 'comment',
     ];
 
     /**
@@ -54,7 +52,7 @@ class Column implements \Reliese\Meta\Column
         $attributes = new Fluent();
 
         foreach ($this->metas as $meta) {
-            $this->{'parse'.ucfirst($meta)}($attributes);
+            $this->{'parse' . ucfirst($meta)}($attributes);
         }
 
         return $attributes;
@@ -65,7 +63,7 @@ class Column implements \Reliese\Meta\Column
      */
     protected function parseType(Fluent $attributes)
     {
-        $dataType = $this->get('data_type', 'string');
+        $dataType           = $this->get('data_type', 'string');
         $attributes['type'] = $dataType;
 
         foreach (static::$mappings as $phpType => $database) {
@@ -75,6 +73,17 @@ class Column implements \Reliese\Meta\Column
         }
 
         $this->parsePrecision($dataType, $attributes);
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $default
+     *
+     * @return mixed
+     */
+    protected function get($key, $default = null)
+    {
+        return Arr::get($this->metadata, $key, $default);
     }
 
     /**
@@ -94,7 +103,7 @@ class Column implements \Reliese\Meta\Column
             return;
         }
 
-        $size = (int) $precision;
+        $size = (int)$precision;
 
         // Check whether it's a boolean
         if ($size == 1 && in_array($databaseType, self::$mappings['boolean'])) {
@@ -111,7 +120,7 @@ class Column implements \Reliese\Meta\Column
         $attributes['size'] = $size;
 
         if ($scale = next($precision)) {
-            $attributes['scale'] = (int) $scale;
+            $attributes['scale'] = (int)$scale;
         }
     }
 
@@ -130,7 +139,21 @@ class Column implements \Reliese\Meta\Column
     protected function parseAutoincrement(Fluent $attributes)
     {
         $attributes['autoincrement'] = preg_match('/serial/i',
-            $this->get('data_type', '')) || $this->defaultIsNextVal($attributes);
+                $this->get('data_type', '')) || $this->defaultIsNextVal($attributes);
+    }
+
+    /**
+     * @param \Illuminate\Support\Fluent $attributes
+     *
+     * @return bool
+     */
+    private function defaultIsNextVal(Fluent $attributes)
+    {
+        $value              = $this->get('column_default', $this->get('generation_expression', null));
+        $isIdentity         = $this->get('is_identity');
+        $identityGeneration = $this->get('identity_generation');
+
+        return preg_match('/nextval\(/i', $value) || ($isIdentity === 'YES' && $identityGeneration === 'BY DEFAULT');
     }
 
     /**
@@ -139,6 +162,17 @@ class Column implements \Reliese\Meta\Column
     protected function parseNullable(Fluent $attributes)
     {
         $attributes['nullable'] = $this->same('is_nullable', 'YES');
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     *
+     * @return bool
+     */
+    protected function same($key, $value)
+    {
+        return strcasecmp($this->get($key, ''), $value) === 0;
     }
 
     /**
@@ -162,41 +196,5 @@ class Column implements \Reliese\Meta\Column
     protected function parseComment(Fluent $attributes)
     {
         $attributes['comment'] = $this->get('Comment');
-    }
-
-    /**
-     * @param string $key
-     * @param mixed $default
-     *
-     * @return mixed
-     */
-    protected function get($key, $default = null)
-    {
-        return Arr::get($this->metadata, $key, $default);
-    }
-
-    /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return bool
-     */
-    protected function same($key, $value)
-    {
-        return strcasecmp($this->get($key, ''), $value) === 0;
-    }
-
-    /**
-     * @param \Illuminate\Support\Fluent $attributes
-     *
-     * @return bool
-     */
-    private function defaultIsNextVal(Fluent $attributes)
-    {
-        $value = $this->get('column_default', $this->get('generation_expression', null));
-        $isIdentity = $this->get('is_identity');
-        $identityGeneration =  $this->get('identity_generation');
-
-        return preg_match('/nextval\(/i', $value) || ($isIdentity === 'YES' && $identityGeneration === 'BY DEFAULT');
     }
 }

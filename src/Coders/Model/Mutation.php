@@ -5,7 +5,7 @@
  * Date: 11/10/16 11:43 PM.
  */
 
-namespace Reliese\Coders\Model;
+namespace Xptela\EloquentModelGenerator\Coders\Model;
 
 use Illuminate\Support\Str;
 
@@ -38,7 +38,7 @@ class Mutation
      */
     public function name()
     {
-        return 'get'.Str::studly($this->name).'Attribute';
+        return 'get' . Str::studly($this->name) . 'Attribute';
     }
 
     /**
@@ -46,6 +46,6 @@ class Mutation
      */
     public function body()
     {
-        return 'return '.$this->body.';';
+        return 'return ' . $this->body . ';';
     }
 }

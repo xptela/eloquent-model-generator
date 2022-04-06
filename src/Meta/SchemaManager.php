@@ -5,18 +5,18 @@
  * Date: 02/10/16 07:37 PM.
  */
 
-namespace Reliese\Meta;
+namespace Xptela\EloquentModelGenerator\Meta;
 
 use ArrayIterator;
-use RuntimeException;
-use IteratorAggregate;
-use Illuminate\Database\MySqlConnection;
-use Illuminate\Database\SQLiteConnection;
-use Illuminate\Database\PostgresConnection;
 use Illuminate\Database\ConnectionInterface;
-use Reliese\Meta\MySql\Schema as MySqlSchema;
-use Reliese\Meta\Sqlite\Schema as SqliteSchema;
-use Reliese\Meta\Postgres\Schema as PostgresSchema;
+use Illuminate\Database\MySqlConnection;
+use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\SQLiteConnection;
+use IteratorAggregate;
+use RuntimeException;
+use Xptela\EloquentModelGenerator\Meta\MySql\Schema as MySqlSchema;
+use Xptela\EloquentModelGenerator\Meta\Postgres\Schema as PostgresSchema;
+use Xptela\EloquentModelGenerator\Meta\Sqlite\Schema as SqliteSchema;
 
 class SchemaManager implements IteratorAggregate
 {
@@ -24,21 +24,19 @@ class SchemaManager implements IteratorAggregate
      * @var array
      */
     protected static $lookup = [
-        MySqlConnection::class => MySqlSchema::class,
-        SQLiteConnection::class => SqliteSchema::class,
-        PostgresConnection::class => PostgresSchema::class,
+        MySqlConnection::class                                       => MySqlSchema::class,
+        SQLiteConnection::class                                      => SqliteSchema::class,
+        PostgresConnection::class                                    => PostgresSchema::class,
         \Larapack\DoctrineSupport\Connections\MySqlConnection::class => MySqlSchema::class,
     ];
-
+    /**
+     * @var \Xptela\EloquentModelGenerator\Meta\Schema[]
+     */
+    protected $schemas = [];
     /**
      * @var \Illuminate\Database\ConnectionInterface
      */
     private $connection;
-
-    /**
-     * @var \Reliese\Meta\Schema[]
-     */
-    protected $schemas = [];
 
     /**
      * SchemaManager constructor.
@@ -57,7 +55,7 @@ class SchemaManager implements IteratorAggregate
      */
     public function boot()
     {
-        if (! $this->hasMapping()) {
+        if (!$this->hasMapping()) {
             throw new RuntimeException("There is no Schema Mapper registered for [{$this->type()}] connection.");
         }
 
@@ -69,9 +67,33 @@ class SchemaManager implements IteratorAggregate
     }
 
     /**
+     * @return bool
+     */
+    protected function hasMapping()
+    {
+        return array_key_exists($this->type(), static::$lookup);
+    }
+
+    /**
+     * @return string
+     */
+    protected function type()
+    {
+        return get_class($this->connection);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getMapper()
+    {
+        return static::$lookup[$this->type()];
+    }
+
+    /**
      * @param string $schema
      *
-     * @return \Reliese\Meta\Schema
+     * @return \Xptela\EloquentModelGenerator\Meta\Schema
      */
     public function make($schema)
     {
@@ -85,37 +107,13 @@ class SchemaManager implements IteratorAggregate
     /**
      * @param string $schema
      *
-     * @return \Reliese\Meta\Schema
+     * @return \Xptela\EloquentModelGenerator\Meta\Schema
      */
     protected function makeMapper($schema)
     {
         $mapper = $this->getMapper();
 
         return new $mapper($schema, $this->connection);
-    }
-
-    /**
-     * @return string
-     */
-    protected function getMapper()
-    {
-        return static::$lookup[$this->type()];
-    }
-
-    /**
-     * @return string
-     */
-    protected function type()
-    {
-        return get_class($this->connection);
-    }
-
-    /**
-     * @return bool
-     */
-    protected function hasMapping()
-    {
-        return array_key_exists($this->type(), static::$lookup);
     }
 
     /**

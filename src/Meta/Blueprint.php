@@ -5,7 +5,7 @@
  * Date: 18/09/16 08:19 PM.
  */
 
-namespace Reliese\Meta;
+namespace Xptela\EloquentModelGenerator\Meta;
 
 use Illuminate\Support\Fluent;
 
@@ -66,33 +66,9 @@ class Blueprint
     public function __construct($connection, $schema, $table, $isView = false)
     {
         $this->connection = $connection;
-        $this->schema = $schema;
-        $this->table = $table;
-        $this->isView = $isView;
-    }
-
-    /**
-     * @return string
-     */
-    public function schema()
-    {
-        return $this->schema;
-    }
-
-    /**
-     * @return string
-     */
-    public function table()
-    {
-        return $this->table;
-    }
-
-    /**
-     * @return string
-     */
-    public function qualifiedTable()
-    {
-        return $this->schema().'.'.$this->table();
+        $this->schema     = $schema;
+        $this->table      = $table;
+        $this->isView     = $isView;
     }
 
     /**
@@ -118,6 +94,20 @@ class Blueprint
     /**
      * @param string $name
      *
+     * @return \Illuminate\Support\Fluent
+     */
+    public function column($name)
+    {
+        if (!$this->hasColumn($name)) {
+            throw new \InvalidArgumentException("Column [$name] does not belong to table [{$this->qualifiedTable()}]");
+        }
+
+        return $this->columns[$name];
+    }
+
+    /**
+     * @param string $name
+     *
      * @return bool
      */
     public function hasColumn($name)
@@ -126,17 +116,27 @@ class Blueprint
     }
 
     /**
-     * @param string $name
-     *
-     * @return \Illuminate\Support\Fluent
+     * @return string
      */
-    public function column($name)
+    public function qualifiedTable()
     {
-        if (! $this->hasColumn($name)) {
-            throw new \InvalidArgumentException("Column [$name] does not belong to table [{$this->qualifiedTable()}]");
-        }
+        return $this->schema() . '.' . $this->table();
+    }
 
-        return $this->columns[$name];
+    /**
+     * @return string
+     */
+    public function schema()
+    {
+        return $this->schema;
+    }
+
+    /**
+     * @return string
+     */
+    public function table()
+    {
+        return $this->table;
     }
 
     /**
@@ -176,14 +176,6 @@ class Blueprint
     }
 
     /**
-     * @return \Illuminate\Support\Fluent[]
-     */
-    public function relations()
-    {
-        return $this->relations;
-    }
-
-    /**
      * @param \Illuminate\Support\Fluent $primaryKey
      *
      * @return $this
@@ -204,7 +196,7 @@ class Blueprint
             return $this->primaryKey;
         }
 
-        if (! empty($this->unique)) {
+        if (!empty($this->unique)) {
             return current($this->unique);
         }
 
@@ -230,18 +222,7 @@ class Blueprint
     }
 
     /**
-     * @param string $database
-     * @param string $table
-     *
-     * @return bool
-     */
-    public function is($database, $table)
-    {
-        return $database == $this->schema() && $table == $this->table();
-    }
-
-    /**
-     * @param \Reliese\Meta\Blueprint $table
+     * @param \Xptela\EloquentModelGenerator\Meta\Blueprint $table
      *
      * @return array
      */
@@ -257,6 +238,25 @@ class Blueprint
         }
 
         return $references;
+    }
+
+    /**
+     * @return \Illuminate\Support\Fluent[]
+     */
+    public function relations()
+    {
+        return $this->relations;
+    }
+
+    /**
+     * @param string $database
+     * @param string $table
+     *
+     * @return bool
+     */
+    public function is($database, $table)
+    {
+        return $database == $this->schema() && $table == $this->table();
     }
 
     /**

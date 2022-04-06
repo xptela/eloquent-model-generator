@@ -1,6 +1,6 @@
 <?php
 
-namespace Reliese\Coders\Model\Relations;
+namespace Xptela\EloquentModelGenerator\Coders\Model\Relations;
 
 use Illuminate\Support\Str;
 

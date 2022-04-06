@@ -5,42 +5,10 @@
  * Date: 01/10/16 03:02 PM.
  */
 
-namespace Reliese\Database\Eloquent;
+namespace Xptela\EloquentModelGenerator\Database\Eloquent;
 
 class Model extends \Illuminate\Database\Eloquent\Model
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function castAttribute($key, $value)
-    {
-        if ($this->hasCustomGetCaster($key)) {
-            return $this->{$this->getCustomGetCaster($key)}($value);
-        }
-
-        return parent::castAttribute($key, $value);
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    protected function hasCustomGetCaster($key)
-    {
-        return $this->hasCast($key) && method_exists($this, $this->getCustomGetCaster($key));
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return string
-     */
-    protected function getCustomGetCaster($key)
-    {
-        return 'from'.ucfirst($this->getCastType($key));
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -70,6 +38,38 @@ class Model extends \Illuminate\Database\Eloquent\Model
      */
     private function getCustomSetCaster($key)
     {
-        return 'to'.ucfirst($this->getCastType($key));
+        return 'to' . ucfirst($this->getCastType($key));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function castAttribute($key, $value)
+    {
+        if ($this->hasCustomGetCaster($key)) {
+            return $this->{$this->getCustomGetCaster($key)}($value);
+        }
+
+        return parent::castAttribute($key, $value);
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return bool
+     */
+    protected function hasCustomGetCaster($key)
+    {
+        return $this->hasCast($key) && method_exists($this, $this->getCustomGetCaster($key));
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return string
+     */
+    protected function getCustomGetCaster($key)
+    {
+        return 'from' . ucfirst($this->getCastType($key));
     }
 }
